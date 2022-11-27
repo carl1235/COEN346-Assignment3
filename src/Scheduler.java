@@ -19,7 +19,7 @@ public class Scheduler extends Thread {
     }
 
     public void run() {
-        File outputFile = new File("/Users/Carl/Desktop/Uni/Fall_2022/COEN_346/ProcessScheduling/src/output.txt");
+        File outputFile = new File("src/output.txt");
 
         try {
 

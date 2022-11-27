@@ -1,10 +1,12 @@
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Scanner;
 
 public class VirtualMemoryManager extends Thread {
     HashMap<String, Integer> variable = new HashMap<>();
+    LinkedList<String> variableLinkedList = new LinkedList<>();
     int memoryDiskSpace = 0;
     int maximumPages;
 
@@ -13,14 +15,26 @@ public class VirtualMemoryManager extends Thread {
     }
     //Semaphore for release and lookup
 
+    //FOR TESTING
+//    public void run(){
+//        store("1",5);
+//        store("2",2);
+//        store("5",1);
+//        store("4",5);
+//        lookup("5");
+//        release("1");
+//        lookup("4");
+//    }
+
     public void store(String variableId, int value) {
         if (memoryDiskSpace < maximumPages) {
             variable.put(variableId, value);
+            variableLinkedList.add(variableId);
 
             memoryDiskSpace++;
             System.out.println("Store (mem): Variable " + variableId + ", Value: " + value);
         } else {
-            writeToFile(variableId, value, false);
+            writeToFile(variableId, value);
         }
 
     }
@@ -31,6 +45,8 @@ public class VirtualMemoryManager extends Thread {
                 System.out.println("Variable " + variableId + " doesn't exist");
             else {
                 variable.remove(variableId);
+                variableLinkedList.remove(variableId);
+
                 memoryDiskSpace--;
                 System.out.println("Variable " + variableId + " released");
             }
@@ -39,7 +55,8 @@ public class VirtualMemoryManager extends Thread {
 
     public int lookup(String variableId) {
         if (variable.get(variableId) != null) {
-            //update last access of variableId
+            String temp_variable = variableLinkedList.removeFirst();
+            variableLinkedList.add(temp_variable);
             return variable.get(variableId);
         } else {
             try {
@@ -49,16 +66,18 @@ public class VirtualMemoryManager extends Thread {
                     String[] line = scanner.nextLine().split("\\s+");
 
                     if (line[0].equals(variableId)) {
-                        if (memoryDiskSpace < maximumPages)
+                        if (memoryDiskSpace < maximumPages) {
                             store(line[0], Integer.parseInt(line[1]));
+                            swap(line[0], Integer.parseInt(line[1]), "", 0);
+                        }
                         else {
-                            //TEMPORARY//
-                            String LA_variableId = "4";
-                            //check for smallest value of last access
+                            String LA_variableId = variableLinkedList.removeFirst();
 
                             swap(line[0], Integer.parseInt(line[1]), LA_variableId, variable.get(LA_variableId));
-                            return Integer.parseInt(line[1]);
+                            variableLinkedList.add(line[0]);
+
                         }
+                        return Integer.parseInt(line[0]);
 
                     }
                 }
@@ -68,11 +87,12 @@ public class VirtualMemoryManager extends Thread {
             }
 
         }
+        System.out.println("Variable " + variableId + " not found");
         return -1;
     }
 
     public void swap(String d_variableId, int d_value, String m_variableId, int m_value) {
-        File newFile = new File("/Users/Carl/Desktop/Uni/Fall_2022/COEN_346/Assignment3/src/temp.txt");
+        File newFile = new File("src/temp.txt");
         try {
             FileWriter newWriter = new FileWriter(newFile, false);
             Scanner reader = new Scanner(main.diskFile);
@@ -80,6 +100,10 @@ public class VirtualMemoryManager extends Thread {
             while (reader.hasNextLine()) {
                 String currentLine = reader.nextLine();
                 if (currentLine.equals(d_variableId + "\t" + d_value)) {
+                    if (m_variableId.equals("")){
+                        newWriter.write("");
+                    }
+                    else
                     newWriter.write(m_variableId + "\t" + m_value + "\n");
                     continue;
                 }
@@ -102,7 +126,7 @@ public class VirtualMemoryManager extends Thread {
         System.out.println("SWAP: Variable " + d_variableId + " with Variable " + m_variableId);
     }
 
-    public void writeToFile(String variableId, int value, boolean replace) {
+    public void writeToFile(String variableId, int value) {
         try {
             FileWriter writer = new FileWriter(main.diskFile, true);
             writer.write(variableId + "\t" + value + "\n");
