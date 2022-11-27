@@ -4,6 +4,8 @@ public class Process extends Thread {
     public int processId;
     public int burstTimeRemaining;
 
+    public int timePerProcess;
+
     public int lastAcessTime;
 
     public Process(int _arrivalTime, int _burstTime, int _id) {
