@@ -3,6 +3,7 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Scanner;
 
 public class Scheduler extends Thread {
     public static int timeQuantum;
@@ -11,7 +12,7 @@ public class Scheduler extends Thread {
 
     //HashMap for the ReadyQueue where it prepares all the ready users and processes
     static Map<Character, ArrayList<Process>> mainList = new HashMap<>();
-
+    File diskFile = new File("src/vm.txt");
     //Constructor
     public Scheduler(int _timeQuantum, ArrayList<Process> _process) {
         timeQuantum = _timeQuantum;
@@ -19,7 +20,25 @@ public class Scheduler extends Thread {
     }
 
     public void run() {
+        int maximumPages = 0;
         File outputFile = new File("src/output.txt");
+
+
+        try {
+            FileWriter fw = new FileWriter(diskFile, false);
+            Scanner scanner = new Scanner(new File("src/memconfig.txt"));
+
+            while (scanner.hasNextLine()){
+                maximumPages = Integer.parseInt(scanner.nextLine());
+            }
+            scanner.close();
+        } catch (IOException e) {
+            System.out.println("Couldn't write to file");
+        }
+
+        VirtualMemoryManager VMM = new VirtualMemoryManager(maximumPages);
+
+        VMM.start();
 
         try {
 
@@ -30,6 +49,8 @@ public class Scheduler extends Thread {
             c.start();
 
             while (true) {
+
+                //FIFO all processes by arrival time
 
                 if (mainList.isEmpty()) break;
                 for (Process p : processes) {

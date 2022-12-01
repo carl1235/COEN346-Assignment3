@@ -7,6 +7,7 @@ import java.util.Scanner;
 public class VirtualMemoryManager extends Thread {
     HashMap<String, Integer> variable = new HashMap<>();
     LinkedList<String> variableLinkedList = new LinkedList<>();
+    File diskFile = new File("src/vm.txt");
     int memoryDiskSpace = 0;
     int maximumPages;
 
@@ -26,7 +27,13 @@ public class VirtualMemoryManager extends Thread {
 //        lookup("4");
 //    }
 
-    public void store(String variableId, int value) {
+    public synchronized void store(String variableId, int value) {
+        try {
+            sleep(randomTime());
+        } catch (InterruptedException e) {
+            System.out.println("Scheduler Sleep Exception");
+        }
+
         if (memoryDiskSpace < maximumPages) {
             variable.put(variableId, value);
             variableLinkedList.add(variableId);
@@ -36,10 +43,15 @@ public class VirtualMemoryManager extends Thread {
         } else {
             writeToFile(variableId, value);
         }
-
     }
 
-    public void release(String variableId) {
+    public synchronized void release(String variableId) {
+        try {
+            sleep(randomTime());
+        } catch (InterruptedException e) {
+            System.out.println("Scheduler Sleep Exception");
+        }
+
         if (memoryDiskSpace != 0) {
             if (lookup(variableId) == -1)
                 System.out.println("Variable " + variableId + " doesn't exist");
@@ -54,13 +66,19 @@ public class VirtualMemoryManager extends Thread {
     }
 
     public int lookup(String variableId) {
+        try {
+            sleep(randomTime());
+        } catch (InterruptedException e) {
+            System.out.println("Scheduler Sleep Exception");
+        }
+
         if (variable.get(variableId) != null) {
             String temp_variable = variableLinkedList.removeFirst();
             variableLinkedList.add(temp_variable);
             return variable.get(variableId);
         } else {
             try {
-                Scanner scanner = new Scanner(main.diskFile);
+                Scanner scanner = new Scanner(diskFile);
 
                 while (scanner.hasNextLine()) {
                     String[] line = scanner.nextLine().split("\\s+");
@@ -95,7 +113,7 @@ public class VirtualMemoryManager extends Thread {
         File newFile = new File("src/temp.txt");
         try {
             FileWriter newWriter = new FileWriter(newFile, false);
-            Scanner reader = new Scanner(main.diskFile);
+            Scanner reader = new Scanner(diskFile);
 
             while (reader.hasNextLine()) {
                 String currentLine = reader.nextLine();
@@ -104,13 +122,13 @@ public class VirtualMemoryManager extends Thread {
                         newWriter.write("");
                     }
                     else
-                    newWriter.write(m_variableId + "\t" + m_value + "\n");
+                        newWriter.write(m_variableId + "\t" + m_value + "\n");
                     continue;
                 }
                 newWriter.write(currentLine + "\n");
             }
 
-            newFile.renameTo(main.diskFile);
+            newFile.renameTo(diskFile);
 
             reader.close();
             newWriter.close();
@@ -128,7 +146,7 @@ public class VirtualMemoryManager extends Thread {
 
     public void writeToFile(String variableId, int value) {
         try {
-            FileWriter writer = new FileWriter(main.diskFile, true);
+            FileWriter writer = new FileWriter(diskFile, true);
             writer.write(variableId + "\t" + value + "\n");
             System.out.println("Store (disk): Variable " + variableId + ", Value: " + value);
 
@@ -140,5 +158,13 @@ public class VirtualMemoryManager extends Thread {
         }
 
 
+    }
+
+    public int randomTime(){
+        int time = 0;
+
+        //Generate random time between 1, 1000
+
+        return time;
     }
 }
