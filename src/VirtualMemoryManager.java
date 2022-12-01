@@ -7,7 +7,7 @@ import java.util.Scanner;
 public class VirtualMemoryManager extends Thread {
     HashMap<String, Integer> variable = new HashMap<>();
     LinkedList<String> variableLinkedList = new LinkedList<>();
-    File diskFile = new File("src/vm.txt");
+    File diskFile = new File("src/TextFiles/vm.txt");
     int memoryDiskSpace = 0;
     int maximumPages;
 
@@ -110,7 +110,7 @@ public class VirtualMemoryManager extends Thread {
     }
 
     public void swap(String d_variableId, int d_value, String m_variableId, int m_value) {
-        File newFile = new File("src/temp.txt");
+        File newFile = new File("src/TextFiles/temp.txt");
         try {
             FileWriter newWriter = new FileWriter(newFile, false);
             Scanner reader = new Scanner(diskFile);

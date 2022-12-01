@@ -5,7 +5,7 @@ public class Clock extends Thread {
     public void run() {
         while (true) {
             try {
-                Thread.sleep(1L);
+                Thread.sleep(10L);
                 time++;
             } catch (InterruptedException e) {
                 System.out.println("Clock Sleep Exception");

@@ -12,7 +12,7 @@ public class Scheduler extends Thread {
 
     //HashMap for the ReadyQueue where it prepares all the ready users and processes
     static Map<Character, ArrayList<Process>> mainList = new HashMap<>();
-    File diskFile = new File("src/vm.txt");
+    File diskFile = new File("src/TextFiles/vm.txt");
     //Constructor
     public Scheduler(int _timeQuantum, ArrayList<Process> _process) {
         timeQuantum = _timeQuantum;
@@ -21,12 +21,12 @@ public class Scheduler extends Thread {
 
     public void run() {
         int maximumPages = 0;
-        File outputFile = new File("src/output.txt");
+        File outputFile = new File("src/TextFiles/output.txt");
 
 
         try {
             FileWriter fw = new FileWriter(diskFile, false);
-            Scanner scanner = new Scanner(new File("src/memconfig.txt"));
+            Scanner scanner = new Scanner(new File("src/TextFiles/memconfig.txt"));
 
             while (scanner.hasNextLine()){
                 maximumPages = Integer.parseInt(scanner.nextLine());
