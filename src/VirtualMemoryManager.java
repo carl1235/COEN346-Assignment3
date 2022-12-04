@@ -152,6 +152,10 @@ public class VirtualMemoryManager extends Thread {
         int time = 0;
 
         //Generate random time between 1, 1000
+        Randow r = new Random();
+        r.nextInt(1001);
+        int time = r.nextInt(1001);
+        //system.out.println(time);
 
         return time;
     }
