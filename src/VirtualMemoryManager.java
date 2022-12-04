@@ -5,29 +5,17 @@ import java.util.LinkedList;
 import java.util.Scanner;
 
 public class VirtualMemoryManager extends Thread {
-    HashMap<String, Integer> variable = new HashMap<>();
-    LinkedList<String> variableLinkedList = new LinkedList<>();
-    File diskFile = new File("src/TextFiles/vm.txt");
-    int memoryDiskSpace = 0;
-    int maximumPages;
+    static HashMap<String, Integer> variable = new HashMap<>();
+    static LinkedList<String> variableLinkedList = new LinkedList<>();
+    static File diskFile = new File("src/TextFiles/vm.txt");
+    static int memoryDiskSpace = 0;
+    static int maximumPages;
 
     VirtualMemoryManager(int _maximumPages) {
         maximumPages = _maximumPages;
     }
-    //Semaphore for release and lookup
 
-    //FOR TESTING
-//    public void run(){
-//        store("1",5);
-//        store("2",2);
-//        store("5",1);
-//        store("4",5);
-//        lookup("5");
-//        release("1");
-//        lookup("4");
-//    }
-
-    public synchronized void store(String variableId, int value) {
+    public static synchronized void store(String variableId, int value) {
         try {
             sleep(randomTime());
         } catch (InterruptedException e) {
@@ -45,7 +33,7 @@ public class VirtualMemoryManager extends Thread {
         }
     }
 
-    public synchronized void release(String variableId) {
+    public static synchronized void release(String variableId) {
         try {
             sleep(randomTime());
         } catch (InterruptedException e) {
@@ -60,12 +48,12 @@ public class VirtualMemoryManager extends Thread {
                 variableLinkedList.remove(variableId);
 
                 memoryDiskSpace--;
-                System.out.println("Variable " + variableId + " released");
+                System.out.println("Release: Variable " + variableId);
             }
         }
     }
 
-    public int lookup(String variableId) {
+    public static synchronized int lookup(String variableId) {
         try {
             sleep(randomTime());
         } catch (InterruptedException e) {
@@ -75,6 +63,7 @@ public class VirtualMemoryManager extends Thread {
         if (variable.get(variableId) != null) {
             String temp_variable = variableLinkedList.removeFirst();
             variableLinkedList.add(temp_variable);
+            System.out.println("Lookup: Variable " + variableId + ", Value: " + variable.get(variableId));
             return variable.get(variableId);
         } else {
             try {
@@ -87,15 +76,15 @@ public class VirtualMemoryManager extends Thread {
                         if (memoryDiskSpace < maximumPages) {
                             store(line[0], Integer.parseInt(line[1]));
                             swap(line[0], Integer.parseInt(line[1]), "", 0);
-                        }
-                        else {
+                        } else {
                             String LA_variableId = variableLinkedList.removeFirst();
 
                             swap(line[0], Integer.parseInt(line[1]), LA_variableId, variable.get(LA_variableId));
                             variableLinkedList.add(line[0]);
 
                         }
-                        return Integer.parseInt(line[0]);
+                        System.out.println("Lookup: Variable " + line[0] + ", Value: " + Integer.parseInt(line[1]));
+                        return Integer.parseInt(line[1]);
 
                     }
                 }
@@ -109,7 +98,7 @@ public class VirtualMemoryManager extends Thread {
         return -1;
     }
 
-    public void swap(String d_variableId, int d_value, String m_variableId, int m_value) {
+    public static void swap(String d_variableId, int d_value, String m_variableId, int m_value) {
         File newFile = new File("src/TextFiles/temp.txt");
         try {
             FileWriter newWriter = new FileWriter(newFile, false);
@@ -118,10 +107,9 @@ public class VirtualMemoryManager extends Thread {
             while (reader.hasNextLine()) {
                 String currentLine = reader.nextLine();
                 if (currentLine.equals(d_variableId + "\t" + d_value)) {
-                    if (m_variableId.equals("")){
+                    if (m_variableId.equals("")) {
                         newWriter.write("");
-                    }
-                    else
+                    } else
                         newWriter.write(m_variableId + "\t" + m_value + "\n");
                     continue;
                 }
@@ -144,7 +132,7 @@ public class VirtualMemoryManager extends Thread {
         System.out.println("SWAP: Variable " + d_variableId + " with Variable " + m_variableId);
     }
 
-    public void writeToFile(String variableId, int value) {
+    public static void writeToFile(String variableId, int value) {
         try {
             FileWriter writer = new FileWriter(diskFile, true);
             writer.write(variableId + "\t" + value + "\n");
@@ -160,7 +148,7 @@ public class VirtualMemoryManager extends Thread {
 
     }
 
-    public int randomTime(){
+    public static int randomTime() {
         int time = 0;
 
         //Generate random time between 1, 1000
