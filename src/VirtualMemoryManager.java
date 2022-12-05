@@ -1,8 +1,5 @@
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Scanner;
+import java.util.*;
 
 public class VirtualMemoryManager extends Thread {
     static HashMap<String, Integer> variable = new HashMap<>();
@@ -10,60 +7,67 @@ public class VirtualMemoryManager extends Thread {
     static File diskFile = new File("src/TextFiles/vm.txt");
     static int memoryDiskSpace = 0;
     static int maximumPages;
+    static int currentCommand = 0;
 
     VirtualMemoryManager(int _maximumPages) {
         maximumPages = _maximumPages;
     }
 
-    public static synchronized void store(String variableId, int value) {
-        try {
-            sleep(randomTime());
-        } catch (InterruptedException e) {
-            System.out.println("Scheduler Sleep Exception");
-        }
+    public static synchronized void store(String variableId, int value, int processId) {
 
         if (memoryDiskSpace < maximumPages) {
             variable.put(variableId, value);
             variableLinkedList.add(variableId);
 
             memoryDiskSpace++;
-            System.out.println("Store (mem): Variable " + variableId + ", Value: " + value);
+            System.out.println("Clock: " + Clock.time + ", Process " + processId + ", Store (mem): Variable " + variableId + ", Value: " + value);
         } else {
-            writeToFile(variableId, value);
+            writeToFile(variableId, value, processId);
         }
     }
 
-    public static synchronized void release(String variableId) {
-        try {
-            sleep(randomTime());
-        } catch (InterruptedException e) {
-            System.out.println("Scheduler Sleep Exception");
-        }
-
+    public static synchronized void release(String variableId, int processId) {
         if (memoryDiskSpace != 0) {
-            if (lookup(variableId) == -1)
-                System.out.println("Variable " + variableId + " doesn't exist");
-            else {
+            if (variable.get(variableId) == null) {
+                File newFile = new File("src/TextFiles/temp.txt");
+                try {
+                    FileWriter newWriter = new FileWriter(newFile, false);
+                    Scanner reader = new Scanner(diskFile);
+
+                    while (reader.hasNextLine()) {
+                        String currentLine = reader.nextLine();
+                        if (currentLine.split("\t")[0].equals(variableId)) {
+                                newWriter.write("");
+                                break;
+                        }
+                    }
+
+                    newFile.renameTo(diskFile);
+
+                    reader.close();
+                    newWriter.close();
+                } catch (FileNotFoundException e) {
+                    System.out.println("File not found");
+                } catch (IOException e) {
+                    System.out.println("Cannot write to file");
+                }
+                System.out.println("Clock: " + Clock.time + ", Process " + processId + ", Release: Variable " + variableId);
+            }else {
                 variable.remove(variableId);
                 variableLinkedList.remove(variableId);
 
                 memoryDiskSpace--;
-                System.out.println("Release: Variable " + variableId);
+                System.out.println("Clock: " + Clock.time + ", Process " + processId + ", Release: Variable " + variableId);
             }
         }
     }
 
-    public static synchronized int lookup(String variableId) {
-        try {
-            sleep(randomTime());
-        } catch (InterruptedException e) {
-            System.out.println("Scheduler Sleep Exception");
-        }
+    public static synchronized int lookup(String variableId, int processId) {
 
         if (variable.get(variableId) != null) {
             String temp_variable = variableLinkedList.removeFirst();
             variableLinkedList.add(temp_variable);
-            System.out.println("Lookup: Variable " + variableId + ", Value: " + variable.get(variableId));
+            System.out.println("Clock: " + Clock.time + ", Process " + processId + ", Lookup: Variable " + variableId + ", Value: " + variable.get(variableId));
             return variable.get(variableId);
         } else {
             try {
@@ -74,7 +78,7 @@ public class VirtualMemoryManager extends Thread {
 
                     if (line[0].equals(variableId)) {
                         if (memoryDiskSpace < maximumPages) {
-                            store(line[0], Integer.parseInt(line[1]));
+                            store(line[0], Integer.parseInt(line[1]), processId);
                             swap(line[0], Integer.parseInt(line[1]), "", 0);
                         } else {
                             String LA_variableId = variableLinkedList.removeFirst();
@@ -83,7 +87,7 @@ public class VirtualMemoryManager extends Thread {
                             variableLinkedList.add(line[0]);
 
                         }
-                        System.out.println("Lookup: Variable " + line[0] + ", Value: " + Integer.parseInt(line[1]));
+                        System.out.println("Clock: " + Clock.time + ", Process " + processId + ", Lookup: Variable " + line[0] + ", Value: " + Integer.parseInt(line[1]));
                         return Integer.parseInt(line[1]);
 
                     }
@@ -129,14 +133,14 @@ public class VirtualMemoryManager extends Thread {
 
         variable.remove(m_variableId);
         variable.put(d_variableId, d_value);
-        System.out.println("SWAP: Variable " + d_variableId + " with Variable " + m_variableId);
+        System.out.println("Clock: " + Clock.time + ", Memory Manager, SWAP: Variable " + d_variableId + " with Variable " + m_variableId);
     }
 
-    public static void writeToFile(String variableId, int value) {
+    public static void writeToFile(String variableId, int value, int processId) {
         try {
             FileWriter writer = new FileWriter(diskFile, true);
             writer.write(variableId + "\t" + value + "\n");
-            System.out.println("Store (disk): Variable " + variableId + ", Value: " + value);
+            System.out.println("Clock: " + Clock.time + ", Process " + processId + ", Store (disk): Variable " + variableId + ", Value: " + value);
 
             writer.close();
         } catch (FileNotFoundException e) {
@@ -145,18 +149,6 @@ public class VirtualMemoryManager extends Thread {
             throw new RuntimeException(e);
         }
 
-
-    }
-
-    public static int randomTime() {
-        int time = 0;
-
-        //Generate random time between 1, 1000
-        Randow r = new Random();
-        r.nextInt(1001);
-        int time = r.nextInt(1001);
-        //system.out.println(time);
-
-        return time;
     }
 }
+

@@ -1,12 +1,11 @@
-import java.io.*;
-
 import java.util.*;
 
 public class Scheduler extends Thread {
     static LinkedList<Process> processes;
+    static LinkedList<Process> readyQueue = new LinkedList<>();
     int numberOfCores;
-    int numberOfProcesses;
-
+    static int numberOfProcesses;
+    int processesDone = 0;
     public Scheduler(int _numberOfCores, int _numberOfProcesses, LinkedList<Process> _process) {
         numberOfCores = _numberOfCores;
         numberOfProcesses = _numberOfProcesses;
@@ -14,35 +13,43 @@ public class Scheduler extends Thread {
     }
 
     public void run() {
-        File outputFile = new File("src/TextFiles/output.txt");
-
-        try {
-            FileWriter outputFileWrite = new FileWriter(outputFile, false);
-            PrintWriter outputFileWriter = new PrintWriter(outputFileWrite);
-
             Clock c = new Clock();
             c.start();
 
             while (true) {
-                for (Process p : processes) {
+                setReadyQueue(c.time);
+
+
+                for (Process p : readyQueue) {
                     //Starts or resumes process
                     if (!p.isAlive()) {
-                        outputFileWriter.println("Time " + c.time + ", Process " + p.processId + ", Started");
-                        System.out.println("Time " + c.time + ", Process " + p.processId + ", Started ");
+                        System.out.println("Clock: " + c.time + ", Process " + p.processId + ": Started.");
                         p.start();
                     }
 
                     if (p.isFinished()) {
-                        outputFileWriter.println("Time " + c.time + ", Process " + p.processId + ", Finished");
-                        System.out.println("Time " + c.time + ", Process " + p.processId + ", Finished");
+                        System.out.println("Clock: " + c.time + ", Process " + p.processId + ": Finished.");
                         p.stop();
+                        readyQueue.remove(p);
+                        processesDone++;
+                        break;
                     }
                 }
-                c.stop();
+                if (readyQueue.isEmpty() && numberOfProcesses == processesDone) {
+                    c.stop();
+                    break;
+                }
             }
-        } catch (IOException e) {
-            System.out.println("Couldn't write to file");
-        }
+
     }
 
+    void setReadyQueue(int time) {
+        int numofprocesses = 0;
+        for (int i = 0; i < numberOfProcesses; i++) {
+            if (processes.get(i).arrivalTime * 1000 <= time && processes.get(i).burstTime != 0 && !processes.get(i).isAlive() && !processes.get(i).isFinished() && numofprocesses <= numberOfCores) {
+                readyQueue.add(processes.get(i));
+                numofprocesses++;
+            }
+        }
+    }
 }

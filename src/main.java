@@ -3,15 +3,26 @@ import java.util.*;
 
 public class main {
 
-    public static void main(String[] args) {
-        File path = new File("src/TextFiles/processes.txt");
+    static LinkedList<String[]> commands = new LinkedList<>();
+
+    public static void main(String[] args) throws Exception {
+
         HashMap<Integer, Integer> process = new HashMap<>();
         LinkedList<Process> processes = new LinkedList<>();
+
         int numberOfCores = 0;
         int numberOfProcesses = 0;
 
+        System.out.println("Program Started...");
+        PrintStream sout = new PrintStream(new FileOutputStream("src/TextFiles/output.txt", false));
+        PrintStream standard = System.out;
+// ...
+        System.setOut(sout);
+
+
 
         try {
+            File path = new File("src/TextFiles/processes.txt");
             BufferedReader br = new BufferedReader(new FileReader(path));
             numberOfCores = Integer.parseInt(br.readLine());
             numberOfProcesses = Integer.parseInt(br.readLine());
@@ -32,9 +43,6 @@ public class main {
             throw new RuntimeException(e);
         }
 
-        Scheduler scheduler = new Scheduler(numberOfCores, numberOfProcesses, processes);
-        scheduler.start();
-
         int maximumPages = 0;
         try {
             new FileWriter(new File("src/TextFiles/vm.txt"), false);
@@ -48,8 +56,39 @@ public class main {
             System.out.println("Couldn't write to file");
         }
 
+
+        try {
+            File path = new File("src/TextFiles/commands.txt");
+            Scanner scanner = new Scanner(path);
+
+            while (scanner.hasNextLine()) {
+                String[] values = scanner.nextLine().split("\\s+");
+                commands.add(values);
+            }
+
+            scanner.close();
+        } catch (FileNotFoundException e) {
+            System.out.println("Cannot read from commands.txt");
+        }
+
         VirtualMemoryManager vmm = new VirtualMemoryManager(maximumPages);
         vmm.start();
+
+        Scheduler scheduler = new Scheduler(numberOfCores, numberOfProcesses, processes);
+        scheduler.start();
+
+        try{
+            scheduler.join();
+            vmm.stop();
+            scheduler.stop();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        System.setOut(standard);
+        System.out.println("Program Finished.");
+
+
     }
 
 }

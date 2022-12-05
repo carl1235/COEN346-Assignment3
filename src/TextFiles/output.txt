@@ -1,0 +1,16 @@
+Clock: 1000, Process 0: Started.
+Clock: 1320, Process 0, Store (mem): Variable 1, Value: 5
+Clock: 1430, Process 0, Store (mem): Variable 2, Value: 3
+Clock: 1580, Process 0, Store (disk): Variable 3, Value: 7
+Clock: 2000, Process 1: Started.
+Clock: 2220, Memory Manager, SWAP: Variable 3 with Variable 1
+Clock: 2220, Process 1, Lookup: Variable 3, Value: 7
+Clock: 2350, Process 0, Lookup: Variable 2, Value: 3
+Clock: 2460, Process 0, Release: Variable 1
+Clock: 2560, Process 0, Store (disk): Variable 1, Value: 8
+Clock: 2890, Memory Manager, SWAP: Variable 1 with Variable 3
+Clock: 2890, Process 1, Lookup: Variable 1, Value: 8
+Clock: 3340, Process 0: Finished.
+Clock: 4000, Process 2: Started.
+Clock: 5180, Process 1: Finished.
+Clock: 7110, Process 2: Finished.
